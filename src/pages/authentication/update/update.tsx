@@ -1,34 +1,33 @@
 import { useState, FormEvent, ChangeEvent, useEffect } from "react";
-
 import { SuccessAlert } from "@/components/molecules/SuccessAlert";
 import { useMutation, useQuery } from '@apollo/client';
-import { GET_USER, UPDATE_USER_MUTATION } from '@/graphql/mutations';
+import { GET_USER, UPDATE_USER } from '@/graphql/mutations';
 import { UpdateFormContent } from "@/components/organisms/UpdateFormContent";
 import { jwtDecode } from "jwt-decode";
-import { Token, User } from "@/types/graphql"
+import { Token, User } from "@/types/graphql";
 import { getFromLocalStorage } from "@/lib/tokenUtils";
 
 interface UpdateFormValues {
     name: string;
     cellphone: string;
-    email: string;
 }
 
 interface FormErrors {
     name: string | null;
     cellphone: string | null;
-    email: string | null;
 }
 
-
+interface UpdateUserResponse {
+    updateUser: {
+        id: string;
+    }
+}
 
 const INITIAL_ERRORS: FormErrors = {
     name: null,
     cellphone: null,
-    email: null,
 };
 
-const EMAIL_REGEX = /^[a-zA-Z0-9]([a-zA-Z0-9._-]*[a-zA-Z0-9])?@[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?\.[a-zA-Z]{2,}(\.[a-zA-Z]{2,})?$/;
 const CELLPHONE_REGEX = /^3\d{9}$/;
 
 export function UpdatePage() {
@@ -36,8 +35,9 @@ export function UpdatePage() {
     const [formValues, setFormValues] = useState<UpdateFormValues>({
         name: '',
         cellphone: '',
-        email: '',
     });
+
+    // Token decoding effect
     useEffect(() => {
         const token = getFromLocalStorage('token', null);
         if (token) {
@@ -47,33 +47,40 @@ export function UpdatePage() {
             } catch (error) {
                 console.error('Error decoding token:', error);
             }
-        } else {
-            console.log('No token found, skipping decode.');
         }
     }, []);
 
-    const { data } = useQuery<{ getUser: User }>(GET_USER, {
+    // Query to get user data
+    const { data: userData } = useQuery<{ getUser: User }>(GET_USER, {
         variables: { id: userId },
         skip: !userId,
     });
 
+    // Update form values when user data is loaded
     useEffect(() => {
-        if (data && data.getUser) {
-            const userInfo = data.getUser;
+        if (userData?.getUser) {
             setFormValues({
-                name: userInfo.fullName,
-                cellphone: userInfo.phoneNumber,
-                email: userInfo.email,
+                name: userData.getUser.fullName,
+                cellphone: userData.getUser.phoneNumber,
             });
         }
-    }, [data]);
+    }, [userData]);
 
-    
     const [errors, setErrors] = useState<FormErrors>(INITIAL_ERRORS);
     const [alertDialogOpen, setAlertDialogOpen] = useState(false);
     const [alertMessage, setAlertMessage] = useState("");
-
-    const [updateUser, { loading }] = useMutation(UPDATE_USER_MUTATION);
+    
+    const [updateUser, { loading }] = useMutation<UpdateUserResponse>(UPDATE_USER, {
+        onCompleted: () => {
+            setAlertMessage("La información se ha actualizado correctamente.");
+            setAlertDialogOpen(true);
+            setErrors(INITIAL_ERRORS);
+        },
+        onError: (error) => {
+            setAlertMessage(`Error al actualizar: ${error.message}`);
+            setAlertDialogOpen(true);
+        },
+    });
 
     const validateField = (id: keyof UpdateFormValues, value: string): string | null => {
         switch (id) {
@@ -81,8 +88,6 @@ export function UpdatePage() {
                 return value.trim() === "" ? "El nombre no es válido" : null;
             case "cellphone":
                 return !CELLPHONE_REGEX.test(value) ? "El número de teléfono no es válido" : null;
-            case "email":
-                return !EMAIL_REGEX.test(value) ? "El correo electrónico no es válido" : null;
             default:
                 return null;
         }
@@ -103,7 +108,6 @@ export function UpdatePage() {
         const newErrors: FormErrors = {
             name: validateField("name", formValues.name),
             cellphone: validateField("cellphone", formValues.cellphone),
-            email: validateField("email", formValues.email),
         };
 
         setErrors(newErrors);
@@ -113,32 +117,22 @@ export function UpdatePage() {
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
 
-        if (!validateForm()) {
+        if (!validateForm() || !userId) {
+            setAlertMessage("Por favor, verifica los datos del formulario.");
+            setAlertDialogOpen(true);
             return;
         }
 
         try {
-            const { data } = await updateUser({
+            await updateUser({
                 variables: {
-                    input: {
-                        name: formValues.name,
-                        email: formValues.email,
-                        cellphone: formValues.cellphone,
-                    },
-                },
+                    id: userId,
+                    fullName: formValues.name,
+                    phoneNumber: formValues.cellphone,
+                }
             });
-
-            if (data.updateUser.success) { // Asegúrate de ajustar esto según la respuesta de tu mutación
-                setAlertMessage("La información se ha actualizado correctamente.");
-                setAlertDialogOpen(true);
-                setErrors(INITIAL_ERRORS);
-            } else {
-                setAlertMessage("Ocurrió un error al actualizar la información. Por favor, intente nuevamente.");
-                setAlertDialogOpen(true);
-            }
         } catch (error) {
-            setAlertMessage("Ocurrió un error al actualizar la información. Por favor, intente nuevamente.");
-            setAlertDialogOpen(true);
+            console.error('Error in form submission:', error);
         }
     };
 
@@ -149,7 +143,6 @@ export function UpdatePage() {
                     formValues={formValues}
                     errors={errors}
                     onInputChange={handleInputChange}
-
                     onSubmit={handleSubmit}
                     isLoading={loading}
                 />

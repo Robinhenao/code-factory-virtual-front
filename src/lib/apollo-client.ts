@@ -2,7 +2,7 @@ import { ApolloClient, InMemoryCache, createHttpLink } from "@apollo/client";
 import { setContext } from '@apollo/client/link/context';
 
 const httpLink = createHttpLink({
-  uri: "http://localhost:8090/graphql",
+  uri: "https://codefact.udea.edu.co/modulo-13/graphql",
 });
 
 const publicRoutes = ['/authentication/login/login', '/authentication/registro/registro'];

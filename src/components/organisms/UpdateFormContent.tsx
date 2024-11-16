@@ -13,12 +13,10 @@ interface UpdateFormContentProps {
   formValues: {
     name: string;
     cellphone: string;
-    email: string;
   };
   errors: {
     name: string | null;
     cellphone: string | null;
-    email: string | null;
   };
   onInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onSubmit: (e: FormEvent) => void;
@@ -50,20 +48,10 @@ export const UpdateFormContent = ({
           />
 
           <FormRegister
-            id="email"
-            label="Correo electrónico"
-            type="email"
-            placeholder="m@example.com"
-            value={formValues.email}
-            onChange={onInputChange}
-            error={errors.email}
-          />
-
-          <FormRegister
             id="cellphone"
             label="Número de teléfono"
             type="text"
-            placeholder="número de teléfono"
+            placeholder="Número de teléfono"
             value={formValues.cellphone}
             onChange={onInputChange}
             error={errors.cellphone}
@@ -77,7 +65,7 @@ export const UpdateFormContent = ({
                   Cargando...
                 </>
               ) : (
-                'Actualizar'
+                "Actualizar"
               )}
             </Button>
           </div>

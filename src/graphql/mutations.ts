@@ -28,17 +28,32 @@ export const GET_USER = gql`
   }
 `;
 
-export const UPDATE_USER_MUTATION = gql`
-  mutation UpdateUser($input: UpdateUserInput!) {
-    updateUser(input: $input) {
-      success
-      message
-      user {
-        id
-        name
-        cellphone
-        email
-      }
+export const UPDATE_USER = gql`
+  mutation Update($id: ID!, $fullName: String!, $phoneNumber: String!) {
+    updateUser(request: { id: $id, fullName: $fullName, phoneNumber: $phoneNumber }) {
+      id
+    }
+  }
+`;
+
+
+
+export const GET_ALL_USERS = gql`
+  query GetAllUsers {
+    getAllUsers {
+      id
+      fullName
+      email
+      role
+    }
+  }
+`;
+
+export const UPDATE_USER_ROLE = gql`
+  mutation UpdateUserRole($id: ID!, $role: Role!) {
+    updateUserRole(id: $id, role: $role) {
+      id
+      role
     }
   }
 `;
