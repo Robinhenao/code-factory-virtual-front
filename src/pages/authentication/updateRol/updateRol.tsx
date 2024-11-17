@@ -21,7 +21,7 @@ import {
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2 } from "lucide-react";
 
-const ROLES = ['Cliente', 'Administrador'];
+const ROLES = ['USER', 'ADMIN'];
 
 interface User {
   id: string;
@@ -34,6 +34,8 @@ const UpdateRolPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [alertMessage, setAlertMessage] = useState('');
   const [showAlert, setShowAlert] = useState(false);
+  const [pendingChanges, setPendingChanges] = useState<Record<string, string>>({});
+  const [updatingUserId, setUpdatingUserId] = useState<string | null>(null);
 
   // Query to get all users
   const { data: usersData, loading: usersLoading, error: usersError } = useQuery(GET_ALL_USERS);
@@ -44,27 +46,47 @@ const UpdateRolPage = () => {
       setAlertMessage("Rol actualizado correctamente");
       setShowAlert(true);
       setTimeout(() => setShowAlert(false), 3000);
+      // Clear pending changes after successful update
+      setPendingChanges((prev) => {
+        const newChanges = { ...prev };
+        if (updatingUserId) {
+          delete newChanges[updatingUserId];
+        }
+        return newChanges;
+      });
+      setUpdatingUserId(null);
     },
     onError: (error) => {
       setAlertMessage(`Error al actualizar rol: ${error.message}`);
       setShowAlert(true);
       setTimeout(() => setShowAlert(false), 3000);
+      setUpdatingUserId(null);
     },
     refetchQueries: [{ query: GET_ALL_USERS }]
   });
 
-  const handleRoleChange = async (userId: string, newRole: string) => {
+  const handleRoleChange = (userId: string, newRole: string) => {
+    setPendingChanges(prev => ({
+      ...prev,
+      [userId]: newRole
+    }));
+  };
+
+  const handleSave = async (userId: string) => {
+    const newRole = pendingChanges[userId];
+    if (!newRole) return;
+
+    setUpdatingUserId(userId);
     try {
       await updateUserRole({
         variables: {
-          input: {
-            userId,
-            role: newRole
-          }
+          id: userId,      // Cambiado de input.userId a id
+          role: newRole    // Cambiado de input.role a role
         }
       });
     } catch (error) {
       console.error('Error updating role:', error);
+      setUpdatingUserId(null);
     }
   };
 
@@ -124,7 +146,7 @@ const UpdateRolPage = () => {
                   <TableCell>{user.email}</TableCell>
                   <TableCell>
                     <Select
-                      defaultValue={user.role}
+                      value={pendingChanges[user.id] || user.role}
                       onValueChange={(value) => handleRoleChange(user.id, value)}
                     >
                       <SelectTrigger className="w-40">
@@ -142,10 +164,10 @@ const UpdateRolPage = () => {
                   <TableCell>
                     <Button 
                       variant="outline"
-                      disabled={updateLoading}
-                      onClick={() => handleRoleChange(user.id, user.role)}
+                      disabled={updateLoading || !pendingChanges[user.id] || updatingUserId === user.id}
+                      onClick={() => handleSave(user.id)}
                     >
-                      {updateLoading && (
+                      {updatingUserId === user.id && (
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       )}
                       Guardar
