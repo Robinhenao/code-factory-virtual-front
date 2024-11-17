@@ -25,15 +25,15 @@ export const NavBar = ({ userId, userRole }: NavBarProps) => {
             case 'ADMIN':
                 return (
                     <>
-                        <NavLink href="#" text="Gestión de vuelos" />
+                        <NavLink href="https://gestion-de-vuelos.vercel.app/" text="Gestión de vuelos" />
                         <NavLink href="#" text="Reservas" />
-                        <NavLink href="#" text="Permisos de usuario" />
+                        <NavLink href="/authentication/updateRol/updateRol" text="Permisos de usuario" />
                     </>
                 );
             case 'USER':
                 return (
                     <>
-                        <NavLink href="#" text="Gestión de vuelos" />
+                        <NavLink href="https://gestion-de-vuelos.vercel.app/" text="Gestión de vuelos" />
                         <NavLink href="#" text="Reservas" />
                     </>
                 );
