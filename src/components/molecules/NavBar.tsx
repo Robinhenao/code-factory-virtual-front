@@ -26,6 +26,7 @@ export const NavBar = ({ userId, userRole }: NavBarProps) => {
                 return (
                     <>
                         <NavLink href="https://gestion-de-vuelos.vercel.app/" text="Gestión de vuelos" />
+                        <NavLink href="https://code-factory-virtual-front-fj3flbr87.vercel.app/fligth-search/" text="Busqueda de vuelos" />
                         <NavLink href="#" text="Reservas" />
                         <NavLink href="/authentication/updateRol/updateRol" text="Permisos de usuario" />
                     </>
@@ -34,6 +35,7 @@ export const NavBar = ({ userId, userRole }: NavBarProps) => {
                 return (
                     <>
                         <NavLink href="https://gestion-de-vuelos.vercel.app/" text="Gestión de vuelos" />
+                        <NavLink href="https://code-factory-virtual-front-fj3flbr87.vercel.app/fligth-search/" text="Busqueda de vuelos" />
                         <NavLink href="#" text="Reservas" />
                     </>
                 );
