@@ -69,7 +69,7 @@ export function LoginPage() {
             password: '',
           });
           localStorage.setItem('token', data.login.token);
-          router.push('/#');
+          router.push('/authentication/update/update');
         } else {
           setLoginError('Error de autenticación');
         }

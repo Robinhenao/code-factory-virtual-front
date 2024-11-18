@@ -3,6 +3,7 @@ import { ReactNode, useEffect, useState } from 'react';
 import { getFromLocalStorage } from '@/lib/tokenUtils';
 import { jwtDecode } from 'jwt-decode';
 import { Token } from "@/types/graphql"
+import router from 'next/router';
 
 export const description = ''
 
@@ -18,10 +19,20 @@ export default function Layout({ children }: { children: ReactNode }) {
         const userDecoded: Token = jwtDecode(token);
         setUserId(userDecoded.id);
         setUserRole(userDecoded.role || "OTHER");
+        if (userDecoded) {
+          const isExpired = userDecoded.exp < Math.floor(Date.now() / 1000);
+          console.log("¿El token está expirado?", isExpired);
+          if(isExpired){
+            localStorage.removeItem("token");
+            router.reload();
+          }
+          router.reload();
+        }
       } catch (error) {
         console.error('Error decoding token:', error);
       }
     } else {
+      router.push('/authentication/login/login');
       console.log('No token found, skipping decode.');
     }
   }, []);
