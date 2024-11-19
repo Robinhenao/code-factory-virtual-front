@@ -26,7 +26,6 @@ export default function Layout({ children }: { children: ReactNode }) {
             localStorage.removeItem("token");
             router.reload();
           }
-          router.reload();
         }
       } catch (error) {
         console.error('Error decoding token:', error);
